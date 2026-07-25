@@ -1,14 +1,9 @@
-# Dependencias del proyecto — Fase 1
-# Descomenta las que vayas a usar segun la interfaz que elijas.
-
-# Interfaz de consola enriquecida (tablas/paneles dinamicos):
-# rich
-
-# Interfaz grafica y graficas (diagrama de Gantt, uso de CPU/memoria):
-# matplotlib
-
-# GUI alternativa:
-# PyQt5
-
-# Pruebas:
-# pytest
+# El simulador no usa dependencias externas: todo se resuelve con la biblioteca
+# estandar de Python 3.10 o superior.
+#
+#   http.server   -> panel web
+#   threading     -> reloj de la simulacion
+#   csv, argparse -> entrada de datos y linea de comandos
+#
+# No hay nada que instalar:
+#   python main.py

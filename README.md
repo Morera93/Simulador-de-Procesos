@@ -1,74 +1,157 @@
-# Simulador-de-Procesos
+# Simulador de Procesos
 
-Proyecto Final — Curso Sistemas Operativos I
+Proyecto Final — Sistemas Operativos I
 Bachillerato en Ingenieria de Sistemas — UACA
 
-Simulador de procesos de un sistema operativo: planificacion de procesos,
-gestion y visualizacion de recursos (CPU, memoria, E/S), modificacion de
-parametros en tiempo real y registro de actividad.
+Simulador de los procesos de un sistema operativo: planificacion, gestion y
+visualizacion de recursos (CPU, memoria y E/S), modificacion de parametros en
+tiempo real y registro de actividad.
 
-## Estado del proyecto
+**Sin dependencias externas.** Solo requiere Python 3.10 o superior.
 
-- [x] **Fase 1 — Estructura del proyecto** (actual): carpetas, paquetes y
-      archivos listos, cada uno documentado con su responsabilidad. Sin logica.
-- [ ] Fase 2 — Modelos y nucleo (Proceso/PCB, estados, reloj de simulacion).
-- [ ] Fase 3 — Algoritmos de planificacion (FCFS, SJF, Round Robin, Prioridad).
-- [ ] Fase 4 — Recursos y metricas (CPU, memoria, E/S, reportes).
-- [ ] Fase 5 — Interfaz (consola o grafica) y visualizacion en tiempo real.
-- [ ] Fase 6 — Documentacion y presentacion final.
+---
+
+## Puesta en marcha
+
+```bash
+python main.py
+```
+
+Abre el panel en <http://127.0.0.1:8765/> con los procesos de
+`data/procesos_ejemplo.csv`. Para el tablero de terminal:
+
+```bash
+python main.py --interfaz consola
+```
+
+Otros ejemplos:
+
+```bash
+python main.py --generar 12 --semilla 7 --algoritmo srtf --nucleos 4
+```
+
+`python main.py --help` lista todas las opciones y sus rangos validos.
+
+---
+
+## Que hace
+
+**Entrada de datos.** Carga desde CSV, generador de carga sintetica reproducible
+por semilla y alta manual de procesos con la simulacion en marcha. Toda entrada
+pasa por la misma validacion, con mensajes en espanol que indican archivo, linea
+y campo.
+
+**Recursos visibles en tiempo real.**
+
+- *CPU multinucleo* con costo de cambio de contexto configurable. Cada tick de
+  nucleo se clasifica en trabajo util, sobrecarga u ocioso.
+- *Memoria* por particiones dinamicas contiguas con primer, mejor y peor ajuste,
+  fusion de huecos y medicion de fragmentacion externa.
+- *Dispositivos de E/S* con cola de peticiones.
+
+**Seis politicas de planificacion:** FCFS, SJF, SRTF, Round Robin, Prioridad y
+Prioridad apropiativa, esta ultima con envejecimiento contra la inanicion.
+
+**Parametros modificables en caliente:** algoritmo, quantum, nucleos, memoria
+total, politica de memoria, dispositivos de E/S, costo de cambio de contexto,
+envejecimiento y velocidad del reloj. Ninguno requiere reiniciar la simulacion.
+
+**Registro y reportes.** Bitacora de eventos clasificada por categoria y
+exportacion a `reportes_generados/`: reporte de la corrida, detalle de procesos
+en CSV y bitacora completa en CSV.
+
+**Dos interfaces.** Panel web (retícula bento, tema oscuro, diagrama de Gantt,
+mapa de memoria, series de uso) y tablero de consola con ANSI. Ambas consumen la
+misma instantanea del simulador.
+
+---
 
 ## Estructura
 
 ```
 Simulador-de-Procesos/
-├── main.py                     # Punto de entrada
-├── requirements.txt            # Dependencias
-├── .gitignore
+├── main.py                     # Punto de entrada y linea de comandos
+├── requirements.txt            # (sin dependencias)
 ├── data/
 │   └── procesos_ejemplo.csv    # Entrada de datos de ejemplo
-├── docs/                       # Entregables de documentacion tecnica
-│   ├── diseno_sistema.md
-│   ├── manual_usuario.md
-│   └── analisis_recursos.md
-├── src/
-│   ├── config.py               # Parametros de la simulacion
-│   ├── modelos/                # Proceso (PCB) y estados
-│   │   ├── proceso.py
-│   │   └── estados.py
-│   ├── nucleo/                 # Reloj/bucle y planificador
-│   │   ├── simulador.py
-│   │   └── planificador.py
-│   ├── algoritmos/             # Algoritmos de planificacion
-│   │   ├── base.py
-│   │   ├── fcfs.py
-│   │   ├── sjf.py
-│   │   ├── round_robin.py
-│   │   └── prioridad.py
-│   ├── recursos/               # CPU, memoria y dispositivos de E/S
-│   │   ├── cpu.py
-│   │   ├── memoria.py
-│   │   └── dispositivos_es.py
-│   ├── interfaz/               # Interfaz de usuario
-│   │   ├── consola.py
-│   │   └── grafica.py
-│   └── reportes/               # Metricas y registro de actividad
-│       ├── metricas.py
-│       └── registro.py
-└── tests/                      # Pruebas
-    ├── test_algoritmos.py
-    ├── test_planificador.py
-    └── test_recursos.py
+└── src/
+    ├── config.py               # Parametros y su validacion
+    ├── modelos/                # PCB y maquina de estados
+    │   ├── proceso.py
+    │   └── estados.py
+    ├── nucleo/                 # Entrada de datos, planificador y reloj
+    │   ├── entrada.py
+    │   ├── planificador.py
+    │   └── simulador.py
+    ├── algoritmos/             # Politicas de planificacion
+    │   ├── base.py
+    │   ├── fcfs.py
+    │   ├── sjf.py
+    │   ├── round_robin.py
+    │   └── prioridad.py
+    ├── recursos/               # CPU, memoria y dispositivos de E/S
+    │   ├── cpu.py
+    │   ├── memoria.py
+    │   └── dispositivos_es.py
+    ├── reportes/               # Bitacora y metricas
+    │   ├── registro.py
+    │   └── metricas.py
+    └── interfaz/               # Panel web (+ web/) y consola
+        ├── grafica.py
+        ├── consola.py
+        └── web/
 ```
 
-## Puesta en marcha (Fase 2 en adelante)
+---
 
-> Nota: aun no hay Python instalado en este equipo (solo los accesos del
-> Microsoft Store). Instalar Python 3 desde https://www.python.org/downloads/
-> y marcar "Add python.exe to PATH".
+## Arquitectura
 
-```bash
-python -m venv .venv
-.venv\Scripts\activate      # Windows
-pip install -r requirements.txt
-python main.py
-```
+Patron **Modelo - Vista - Controlador**, con una regla que se cumple sin
+excepciones: **las vistas no calculan nada**. Consumen una instantanea
+(`Simulador.instantanea()`) y envian ordenes; toda la logica vive en el nucleo.
+
+| Capa | Modulos |
+|---|---|
+| Vistas | `interfaz/grafica.py` (panel web), `interfaz/consola.py` (terminal) |
+| Controladores | `nucleo/simulador.py`, `nucleo/planificador.py`, `nucleo/entrada.py`, `algoritmos/` |
+| Modelos | `modelos/`, `recursos/`, `reportes/`, `config.py` |
+
+Las dependencias apuntan siempre hacia adentro: `interfaz` conoce a `nucleo`;
+`nucleo` conoce a `modelos`, `recursos` y `algoritmos`; los modelos no conocen a
+nadie.
+
+### Decisiones tecnicas
+
+**Las colas se derivan del estado.** `Planificador` guarda una sola lista de
+procesos y expone `listos`, `bloqueados`, etc. como propiedades que filtran por
+estado. Mantener listas paralelas es la fuente clasica de desincronizacion entre
+la cola y el PCB. El orden FIFO se conserva con `secuencia_listos`.
+
+**Los algoritmos solo definen un criterio de orden.** La seleccion y la
+expropiacion se implementan una sola vez en `AlgoritmoPlanificacion`; cada
+politica sobrescribe `clave_orden()`. FCFS y Round Robin heredan el orden FIFO
+por defecto.
+
+**Un solo descriptor por parametro.** `PARAMETROS` define etiqueta, tipo,
+limites, unidad y ayuda. El mismo diccionario valida los cambios, genera las
+opciones de la linea de comandos y construye los controles de las dos interfaces.
+
+**Un unico cerrojo reentrante.** El reloj corre en un hilo aparte mientras el
+panel web atiende peticiones; todas las mutaciones pasan por `Simulador._bloqueo`.
+La espera entre ticks ocurre fuera del cerrojo para no bloquear a la interfaz.
+
+**Cambios de parametros con reversion.** Si un recurso rechaza el cambio (por
+ejemplo, reducir la memoria por debajo de lo que ocupan los procesos cargados),
+la configuracion vuelve a su valor anterior.
+
+---
+
+## Cumplimiento de los requisitos
+
+| Requisito del enunciado | Donde vive |
+|---|---|
+| Simulacion de la entrada de datos | [entrada.py](src/nucleo/entrada.py), [procesos_ejemplo.csv](data/procesos_ejemplo.csv) |
+| Consumo de CPU, memoria y E/S | [cpu.py](src/recursos/cpu.py), [memoria.py](src/recursos/memoria.py), [dispositivos_es.py](src/recursos/dispositivos_es.py) |
+| Parametros modificables en tiempo real | [config.py](src/config.py), [simulador.py](src/nucleo/simulador.py) |
+| Registro y reporte de actividades | [registro.py](src/reportes/registro.py), [metricas.py](src/reportes/metricas.py) |
+| Interfaz grafica o de consola | [grafica.py](src/interfaz/grafica.py), [consola.py](src/interfaz/consola.py) |

@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Simulador de Procesos — Sistemas Operativos I</title>
+  <link rel="stylesheet" href="estilos.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230b1220'/><rect x='9' y='9' width='14' height='14' rx='3' fill='none' stroke='%2322c55e' stroke-width='2.5'/></svg>">
+</head>
+<body>
+<a class="salto-contenido" href="#tablero">Saltar al tablero</a>
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-ejecutar" viewBox="0 0 24 24"><polygon points="7 4 20 12 7 20" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pausar" viewBox="0 0 24 24"><rect x="7" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-paso" viewBox="0 0 24 24"><polygon points="6 4 16 12 6 20" fill="currentColor" stroke="none"/><rect x="18" y="4" width="3" height="16" rx="1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-reiniciar" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><polyline points="20 3 20 8 15 8"/></symbol>
+    <symbol id="i-exportar" viewBox="0 0 24 24"><path d="M12 3v12"/><polyline points="7 11 12 16 17 11"/><path d="M4 20h16"/></symbol>
+    <symbol id="i-cpu" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><rect x="9.5" y="9.5" width="5" height="5" rx="1"/><path d="M10 3v3M14 3v3M10 18v3M14 18v3M3 10h3M3 14h3M18 10h3M18 14h3"/></symbol>
+    <symbol id="i-memoria" viewBox="0 0 24 24"><path d="M12 3l9 4.5-9 4.5-9-4.5z"/><path d="M3 12l9 4.5 9-4.5"/><path d="M3 16.5L12 21l9-4.5"/></symbol>
+    <symbol id="i-dispositivo" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 13h18"/><circle cx="7.5" cy="16.5" r="1.1" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-colas" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="4.5" cy="18" r="1.4" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-actividad" viewBox="0 0 24 24"><polyline points="3 13 7 13 10 5 14 19 17 13 21 13"/></symbol>
+    <symbol id="i-gantt" viewBox="0 0 24 24"><rect x="3" y="5" width="9" height="3.5" rx="1.2"/><rect x="8" y="10.25" width="12" height="3.5" rx="1.2"/><rect x="5" y="15.5" width="8" height="3.5" rx="1.2"/></symbol>
+    <symbol id="i-bitacora" viewBox="0 0 24 24"><polyline points="4 7 9 12 4 17"/><path d="M12 17h8"/></symbol>
+    <symbol id="i-indicadores" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+    <symbol id="i-parametros" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
+    <symbol id="i-agregar" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-generar" viewBox="0 0 24 24"><path d="M12 3l1.7 4.8L18.5 9.5l-4.8 1.7L12 16l-1.7-4.8L5.5 9.5l4.8-1.7z"/><path d="M18 15l.8 2.2 2.2.8-2.2.8L18 21l-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+    <symbol id="i-tabla" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M9 9.5V20"/></symbol>
+  </defs>
+</svg>
+
+<header class="barra">
+  <div class="marca">
+    <span class="marca__sello" aria-hidden="true"><svg><use href="#i-cpu"/></svg></span>
+    <span class="marca__texto">
+      <strong>Simulador de Procesos</strong>
+      <small>Sistemas Operativos I · UACA</small>
+    </span>
+  </div>
+
+  <div class="lectura-reloj" role="group" aria-label="Reloj de la simulacion">
+    <span class="lectura-reloj__valor" id="reloj">0</span>
+    <span class="lectura-reloj__unidad">ticks</span>
+    <span class="insignia" id="estado" data-estado="detenida">
+      <i class="insignia__punto" aria-hidden="true"></i><span id="estado-texto">Detenida</span>
+    </span>
+    <span class="insignia insignia--tenue" id="algoritmo-activo">—</span>
+  </div>
+
+  <div class="transporte" role="group" aria-label="Control de la simulacion">
+    <button type="button" class="boton boton--principal" id="btn-ejecutar" data-atajo="Espacio">
+      <svg aria-hidden="true"><use href="#i-ejecutar" id="icono-ejecutar"/></svg><span id="btn-ejecutar-texto">Iniciar</span>
+    </button>
+    <button type="button" class="boton" id="btn-paso" data-atajo="S"><svg aria-hidden="true"><use href="#i-paso"/></svg>Paso</button>
+    <button type="button" class="boton" id="btn-reiniciar" data-atajo="R"><svg aria-hidden="true"><use href="#i-reiniciar"/></svg>Reiniciar</button>
+    <button type="button" class="boton" id="btn-exportar" data-atajo="E"><svg aria-hidden="true"><use href="#i-exportar"/></svg>Exportar</button>
+  </div>
+</header>
+
+<p class="aviso" id="aviso" role="alert" hidden></p>
+
+<div class="disposicion">
+  <main class="bento" id="tablero">
+
+    <section class="tarjeta tarjeta--cpu">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">01</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-cpu"/></svg>
+        <h2>Procesador</h2>
+        <span class="tarjeta__dato"><b id="cpu-uso">0%</b> ocupacion</span>
+      </header>
+      <div class="nucleos" id="nucleos"></div>
+      <dl class="mini-datos">
+        <div><dt>Trabajo util</dt><dd id="cpu-util">0%</dd></div>
+        <div><dt>Sobrecarga</dt><dd id="cpu-sobrecarga">0</dd></div>
+        <div><dt>Ticks ociosos</dt><dd id="cpu-ocioso">0</dd></div>
+        <div><dt>Cambios de contexto</dt><dd id="cpu-cambios">0</dd></div>
+      </dl>
+    </section>
+
+    <section class="tarjeta tarjeta--indicadores">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">02</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-indicadores"/></svg>
+        <h2>Indicadores</h2>
+      </header>
+      <ul class="indicadores" id="indicadores"></ul>
+    </section>
+
+    <section class="tarjeta tarjeta--memoria">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">03</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-memoria"/></svg>
+        <h2>Memoria principal</h2>
+        <span class="tarjeta__dato"><b id="memoria-uso">0%</b> en uso</span>
+      </header>
+      <div class="mapa-memoria" id="mapa-memoria" role="img" aria-label="Mapa de particiones de memoria"></div>
+      <ul class="leyenda" id="leyenda-memoria"></ul>
+      <dl class="mini-datos">
+        <div><dt>Ocupada</dt><dd id="memoria-usada">0 KB</dd></div>
+        <div><dt>Libre</dt><dd id="memoria-libre">0 KB</dd></div>
+        <div><dt>Mayor hueco</dt><dd id="memoria-hueco">0 KB</dd></div>
+        <div><dt>Fragmentacion externa</dt><dd id="memoria-fragmentacion">0%</dd></div>
+      </dl>
+    </section>
+
+    <section class="tarjeta tarjeta--es">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">04</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-dispositivo"/></svg>
+        <h2>Entrada / Salida</h2>
+        <span class="tarjeta__dato"><b id="es-uso">0%</b> ocupacion</span>
+      </header>
+      <div class="dispositivos" id="dispositivos"></div>
+      <h3 class="subtitulo">Cola de peticiones</h3>
+      <div class="fichas" id="cola-es"></div>
+    </section>
+
+    <section class="tarjeta tarjeta--gantt">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">05</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-gantt"/></svg>
+        <h2>Diagrama de Gantt</h2>
+        <span class="tarjeta__dato">ultimos 120 ticks</span>
+      </header>
+      <canvas id="gantt" height="150"></canvas>
+    </section>
+
+    <section class="tarjeta tarjeta--colas">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">06</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-colas"/></svg>
+        <h2>Colas de procesos</h2>
+      </header>
+      <div class="colas" id="colas"></div>
+    </section>
+
+    <section class="tarjeta tarjeta--series">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">07</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-actividad"/></svg>
+        <h2>Uso de recursos</h2>
+      </header>
+      <canvas id="series" height="140"></canvas>
+      <ul class="leyenda leyenda--series">
+        <li><span class="trazo trazo--cpu" aria-hidden="true"></span>CPU</li>
+        <li><span class="trazo trazo--memoria" aria-hidden="true"></span>Memoria</li>
+        <li><span class="trazo trazo--es" aria-hidden="true"></span>E/S</li>
+      </ul>
+      <dl class="mini-datos">
+        <div><dt>Pico de CPU</dt><dd id="pico-cpu">0%</dd></div>
+        <div><dt>Pico de memoria</dt><dd id="pico-memoria">0%</dd></div>
+        <div><dt>Pico de E/S</dt><dd id="pico-es">0%</dd></div>
+        <div><dt>Maximo en cola de listos</dt><dd id="pico-listos">0</dd></div>
+      </dl>
+    </section>
+
+    <section class="tarjeta tarjeta--procesos">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">08</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-tabla"/></svg>
+        <h2>Procesos</h2>
+      </header>
+      <div class="tabla-envoltura">
+        <table class="tabla">
+          <caption class="visualmente-oculto">Detalle de cada proceso y sus tiempos</caption>
+          <thead>
+            <tr>
+              <th scope="col">PID</th><th scope="col">Nombre</th><th scope="col">Estado</th>
+              <th scope="col">CPU</th><th scope="col">Prio.</th><th scope="col">KB</th>
+              <th scope="col">Espera</th><th scope="col">Retorno</th><th scope="col">Resp.</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-procesos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="tarjeta tarjeta--bitacora">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">09</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-bitacora"/></svg>
+        <h2>Bitacora de actividades</h2>
+        <label class="alterna">
+          <input type="checkbox" id="auto-desplazar" checked> Seguir
+        </label>
+      </header>
+      <ol class="bitacora" id="bitacora" aria-live="polite" aria-relevant="additions"></ol>
+    </section>
+  </main>
+
+  <aside class="controles" aria-label="Panel de control">
+    <section class="tarjeta">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">10</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-parametros"/></svg>
+        <h2>Parametros en vivo</h2>
+      </header>
+      <p class="nota">Los cambios se aplican de inmediato, sin detener la simulacion.</p>
+      <form class="formulario" id="form-parametros" novalidate></form>
+    </section>
+
+    <section class="tarjeta">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">11</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-agregar"/></svg>
+        <h2>Nuevo proceso</h2>
+      </header>
+      <form class="formulario" id="form-proceso" novalidate>
+        <div class="campo">
+          <label for="proceso-nombre">Nombre</label>
+          <input type="text" id="proceso-nombre" name="nombre" maxlength="20" placeholder="opcional">
+        </div>
+        <div class="campo-doble" id="campos-proceso"></div>
+        <button type="submit" class="boton boton--principal boton--ancho">
+          <svg aria-hidden="true"><use href="#i-agregar"/></svg>Agregar al sistema
+        </button>
+      </form>
+    </section>
+
+    <section class="tarjeta">
+      <header class="tarjeta__encabezado">
+        <span class="tarjeta__indice">12</span>
+        <svg class="tarjeta__icono" aria-hidden="true"><use href="#i-generar"/></svg>
+        <h2>Carga sintetica</h2>
+      </header>
+      <p class="nota">Simula la llegada continua de procesos al sistema.</p>
+      <form class="formulario" id="form-carga" novalidate>
+        <div class="campo-doble">
+          <div class="campo">
+            <label for="carga-cantidad">Cantidad</label>
+            <input type="number" id="carga-cantidad" name="cantidad" value="5" min="1" max="50" inputmode="numeric">
+          </div>
+          <div class="campo">
+            <label for="carga-semilla">Semilla</label>
+            <input type="number" id="carga-semilla" name="semilla" placeholder="azar" inputmode="numeric">
+          </div>
+        </div>
+        <button type="submit" class="boton boton--ancho">
+          <svg aria-hidden="true"><use href="#i-generar"/></svg>Generar procesos
+        </button>
+      </form>
+    </section>
+
+    <section class="tarjeta tarjeta--ayuda">
+      <h2 class="subtitulo">Atajos de teclado</h2>
+      <ul class="atajos">
+        <li><kbd>Espacio</kbd> iniciar o pausar</li>
+        <li><kbd>S</kbd> avanzar un tick</li>
+        <li><kbd>R</kbd> reiniciar</li>
+        <li><kbd>E</kbd> exportar reporte</li>
+      </ul>
+    </section>
+  </aside>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
